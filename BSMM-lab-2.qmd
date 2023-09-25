@@ -1,8 +1,8 @@
 ---
 title: "BSMM-lab-2"
 subtitle: "BSMM 8740 Fall 2023"
-author: "Add your name here"
-date: "Add the date here"
+author: "Manushi Dalal"
+date: "September 25, 2023"
 format: html
 editor: visual
 self-contained: true
@@ -22,7 +22,24 @@ the_tate_artists <- readr::read_csv("data/the-tate-artists.csv")
 
 ### Exercise 1
 
-The `the_tate` dataset has \_\_\_ unique artists who worked from \_\_\_ to \_\_\_. The works were acquired between the years \_\_\_ and \_\_\_.
+```         
+```
+
+```         
+```
+
+```{r}
+the_tate |> 
+  dplyr::summarize(
+    artist = length(unique(artistId)), 
+    min_year = min(year, na.rm = TRUE),
+    max_year = max(year, na.rm = TRUE),
+    aquisition_start = min(acquisitionYear, na.rm = TRUE),
+    aquisition_end = max(acquisitionYear, na.rm = TRUE)
+  )
+```
+
+The `the_tate` dataset has 3342 unique artists who worked from \_\_\_ to \_\_\_. The works were acquired between the years \_\_\_ and \_\_\_.
 
 ### Exercise 2
 
