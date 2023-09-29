@@ -12,6 +12,24 @@ self-contained: true
 
 Load packages and data:
 
+```{r}
+#install.packages("tidyverse")
+#install.packages("gt")
+#install.packages("gtExtras")     
+#install.packages("DataExplorer")
+#install.packages("tidymodels")
+#install.packages("magrittr")
+```
+
+```{r}
+library(magrittr)
+library(tidyverse)
+library(tidymodels)
+library(gt)
+library(gtExtras)
+library(DataExplorer)
+```
+
 ```{r load-pkg-data}
 #| message: false
 the_tate <- readr::read_delim("data/the-tate-collection.csv", ";", escape_double = FALSE, trim_ws = TRUE)
@@ -22,42 +40,189 @@ the_tate_artists <- readr::read_csv("data/the-tate-artists.csv")
 
 ### Exercise 1
 
-```         
+```{r}
+glimpse(the_tate_artists)
 ```
 
-```         
+```{r}
+View(the_tate)
+View(the_tate_artists)
+```
+
+```{r}
+glimpse(the_tate)
+```
+
+```{r}
+summary(the_tate)
 ```
 
 ```{r}
 the_tate |> 
-  dplyr::summarize(
-    artist = length(unique(artistId)), 
-    min_year = min(year, na.rm = TRUE),
-    max_year = max(year, na.rm = TRUE),
-    aquisition_start = min(acquisitionYear, na.rm = TRUE),
-    aquisition_end = max(acquisitionYear, na.rm = TRUE)
-  )
+  dplyr::group_by(the_tate$artistId) |> 
+  dplyr::summarize(N=n(),min_yearworking= min(the_tate$year,na.rm = TRUE),
+                   max_yearworking= max(the_tate$year,na.rm = TRUE),
+                   min_aquistionyear=min(the_tate$acquisitionYear, na.rm = TRUE),
+                   max_acquisitionyear=max(the_tate$year,na.rm = TRUE)  )
 ```
 
-The `the_tate` dataset has 3342 unique artists who worked from \_\_\_ to \_\_\_. The works were acquired between the years \_\_\_ and \_\_\_.
+```{r}
+library(dplyr)
+# Calculate the number of unique artists using select
+unique_artists_count <- the_tate |>
+  select(artistId) |>
+  distinct() |>
+  nrow()
+```
+
+```{r}
+unique_artists_count
+```
+
+```{r}
+# Find the range of years artists worked
+min_year_worked <- min(the_tate$year,na.rm = TRUE)
+max_year_worked <- max(the_tate$year,na.rm = TRUE)
+```
+
+```{r}
+# Find the range of acquisition years
+min_acquisition_year <- min(the_tate$acquisitionYear, na.rm = TRUE)
+max_acquisition_year <- max(the_tate$acquisitionYear, na.rm = TRUE)
+```
+
+```{r}
+DataExplorer::introduce(the_tate)
+```
+
+```{r}
+DataExplorer::introduce(the_tate_artists)
+```
+
+```{r}
+DataExplorer::plot_missing(the_tate)
+```
+
+```{r}
+DataExplorer::plot_missing(the_tate_artists)
+```
+
+The the_tate dataset has **3342** unique artists who worked from **1545** to **2012**. The works were acquired between the years **1823** and **2013**.
 
 ### Exercise 2
 
-How number of works with missing dates is \_\_.
+```{r}
+works_with_missing_years <- sum(is.na(the_tate$year))
+works_with_missing_years
+```
 
-The number of artists whose works have missing dates is \_\_.
+How number of works with missing dates is **5397**.
 
-It would require resolving missing year data for only \_\_ artists resolve resolve at least 50% of the missing data.
+```{r}
+the_tate|>
+  dplyr::filter(is.na(year))|>
+  dplyr::distinct(artist)
+```
 
-The missing year data likely to be classified as \_\_\_\_.
+```{r}
+artists_with_missing_dates <- the_tate |>
+  filter(is.na(year)) |>
+  distinct(artist) |>
+  nrow()
+```
+
+```{r}
+artists_with_missing_dates
+```
+
+The number of artists whose works have missing dates is **461**.
+
+```{r}
+# Count the number of works missing years for each artist
+artist_missing_year_counts <- the_tate|>
+  dplyr::filter(is.na(year)) |>
+  group_by(artist) |>
+  summarise(missing_years = sum(is.na(year))) |>
+  arrange(desc(missing_years)) |>
+  as_tibble()
+```
+
+```{r}
+# Determine how many artists have works with missing years
+artists_with_missing_years <- nrow(artist_missing_year_counts)
+artists_with_missing_years
+```
+
+```{r}
+# Calculate the percent of total missing data for each artist
+artist_missing_year_counts <- artist_missing_year_counts |>
+  mutate(percentage = (missing_years / works_with_missing_years) * 100)
+```
+
+```{r}
+# Calculate the cumulative percent of missing data
+artist_missing_year_counts <- artist_missing_year_counts |>
+  mutate(cumulative_percentage = cumsum(percentage))
+```
+
+```{r}
+# Identify the smallest number of artists needed to resolve at least 50% of the missing year data
+artists_to_resolve_50_percent <- min(which(artist_missing_year_counts$cumulative_percentage >= 50))
+
+artists_to_resolve_50_percent
+```
+
+It would require resolving missing year data for only **11** artists resolve resolve at least 50% of the missing data.
+
+The missing year data likely to be classified as **MAR**.
 
 ### Exercise 3
 
-The artist with the most works in the Tate collection is \_\_\_.
+```{r}
+# Group the data by artist and count the number of works for each artist
+artist_work_counts <- the_tate |>
+  group_by(artist) |>
+  summarize(title = n()) |>
+  arrange(desc(title))
 
-The artist with the tenth-most works in the Tate collection is \_\_\_.
+# Display the top 10 artists by the number of works
+top_10_artists <- artist_work_counts |>
+  slice_head(n = 10)
+```
+
+```{r}
+View(artist_work_counts)
+View(top_10_artists)
+```
+
+The artist with the most works in the Tate collection is **Turner, Joseph Mallord William**.
+
+The artist with the tenth-most works in the Tate collection is **Warhol, Andy**.
 
 ### Exercise 4
+
+```{r}
+total_works <- nrow(the_tate)
+artist_work_counts %<>%mutate(percentage=(title/total_works)*100)
+```
+
+```{r}
+View(artist_work_counts)
+```
+
+```{r}
+# Create the table using gt
+table <- artist_work_counts |>
+  gt() |>
+  fmt_number(
+    columns = c(title, percentage), # Format both title and percentage columns
+    decimals = 2 # No decimal places for title, and decimals for percentage
+  ) |>
+  tab_header(title = "Top Artists by Number of Works and Percentage of Collection")
+
+# Print the formatted table
+print(table)
+```
 
 The artist with the greatest number of works in the Tate collection represent \_\_\_% of the total number of works
 
