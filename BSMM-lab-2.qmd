@@ -174,7 +174,7 @@ artists_to_resolve_50_percent
 
 It would require resolving missing year data for only **11** artists resolve resolve at least 50% of the missing data.
 
-The missing year data likely to be classified as **MAR**.
+The missing year data likely to be classified as **Missing At Random (MAR)**.
 
 ### Exercise 3
 
@@ -204,13 +204,9 @@ The artist with the tenth-most works in the Tate collection is **Warhol, Andy**.
 ```{r}
 total_works <- nrow(the_tate)
 artist_work_counts %<>%mutate(percentage=(title/total_works)*100)
-```
 
-```{r}
 View(artist_work_counts)
-```
 
-```{r}
 # Create the table using gt
 table <- artist_work_counts |>
   gt() |>
@@ -224,7 +220,7 @@ table <- artist_work_counts |>
 print(table)
 ```
 
-The artist with the greatest number of works in the Tate collection represent \_\_\_% of the total number of works
+The artist with the greatest number of works in the Tate collection represent **56.92%** of the total number of works
 
 ### Exercise 5
 
@@ -303,10 +299,8 @@ view(the_tate_artists)
 ```
 
 ```{r}
-# Load the required libraries
+# Load the libraries
 library(dplyr)
-
-
 
 # Left join the tables and group the result by gender
 gender_grouped<- the_tate |>
